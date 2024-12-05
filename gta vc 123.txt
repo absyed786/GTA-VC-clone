@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GTA-Inspired Game</title>
+  <style>
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: #2b2b2b;
+    }
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<script>
+  // Setup
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const keys = {};
+  let score = 0;
+
+  // Player object
+  const player = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    width: 40,
+    height: 40,
+    color: 'blue',
+    speed: 5,
+  };
+
+  // NPC object
+  const npc = {
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    width: 40,
+    height: 40,
+    color: 'green',
+  };
+
+  // Car object
+  const car = {
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    width: 60,
+    height: 30,
+    color: 'red',
+    speed: 8,
+    inUse: false,
+  };
+
+  // Objective object
+  const objective = {
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    width: 50,
+    height: 50,
+    color: 'yellow',
+  };
+
+  // Key listeners
+  window.addEventListener('keydown', (e) => (keys[e.key] = true));
+  window.addEventListener('keyup', (e) => (keys[e.key] = false));
+
+  // Collision detection
+  function isColliding(a, b) {
+    return (
+      a.x < b.x + b.width &&
+      a.x + a.width > b.x &&
+      a.y < b.y + b.height &&
+      a.y + a.height > b.y
+    );
+  }
+
+  // Game loop
+  function gameLoop() {
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Movement logic
+    if (keys['w'] || keys['ArrowUp']) (car.inUse ? car : player).y -= (car.inUse ? car.speed : player.speed);
+    if (keys['s'] || keys['ArrowDown']) (car.inUse ? car : player).y += (car.inUse ? car.speed : player.speed);
+    if (keys['a'] || keys['ArrowLeft']) (car.inUse ? car : player).x -= (car.inUse ? car.speed : player.speed);
+    if (keys['d'] || keys['ArrowRight']) (car.inUse ? car : player).x += (car.inUse ? car.speed : player.speed);
+
+    // Keep player within bounds
+    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+    player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+
+    // Interaction: Enter/Exit car
+    if (isColliding(player, car) && !car.inUse && keys['e']) {
+      car.inUse = true;
+      car.x = player.x;
+      car.y = player.y;
+    } else if (car.inUse && keys['e']) {
+      car.inUse = false;
+      player.x = car.x;
+      player.y = car.y;
+    }
+
+    // Objective interaction
+    if (isColliding(player, objective) && !car.inUse) {
+      score += 5;
+      objective.x = Math.random() * canvas.width;
+      objective.y = Math.random() * canvas.height;
+    }
+
+    // NPC interaction
+    if (isColliding(player, npc) && !car.inUse && keys['e']) {
+      score++;
+      npc.x = Math.random() * canvas.width;
+      npc.y = Math.random() * canvas.height;
+    }
+
+    // Draw objective
+    ctx.fillStyle = objective.color;
+    ctx.fillRect(objective.x, objective.y, objective.width, objective.height);
+
+    // Draw NPC
+    ctx.fillStyle = npc.color;
+    ctx.fillRect(npc.x, npc.y, npc.width, npc.height);
+
+    // Draw player
+    if (!car.inUse) {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    // Draw car
+    ctx.fillStyle = car.color;
+    ctx.fillRect(car.x, car.y, car.width, car.height);
+
+    // Draw score
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Score: ${score}`, 20, 30);
+
+    // Loop
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Start game
+  gameLoop();
+</script>
+</body>
+</html>
